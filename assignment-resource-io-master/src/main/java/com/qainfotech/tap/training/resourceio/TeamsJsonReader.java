@@ -117,7 +117,8 @@ public class TeamsJsonReader {
 	 * @throws FileNotFoundException
 	 */
 	public List<Individual> getListOfInactiveIndividuals() throws FileNotFoundException, IOException {
-
+		
+		myObjList2.clear();
 		JSONParser parser = new JSONParser();
 
 		JSONObject obj = null;
@@ -160,6 +161,7 @@ public class TeamsJsonReader {
 	public List<Individual> getListOfActiveIndividuals() throws FileNotFoundException, IOException {
 
 		JSONParser parser = new JSONParser();
+		myObjList3.clear();
 
 		JSONObject obj = null;
 		try {
@@ -201,6 +203,7 @@ public class TeamsJsonReader {
 	 */
 	public List<Team> getListOfTeams() throws FileNotFoundException, IOException {
 		JSONParser parser = new JSONParser();
+		myObjList5.clear();
 		JSONObject obj = null;
 		try {
 			obj = (JSONObject) parser.parse(new FileReader("src/main/resources/db.json"));
