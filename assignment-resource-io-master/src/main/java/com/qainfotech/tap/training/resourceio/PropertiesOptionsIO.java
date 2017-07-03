@@ -86,7 +86,8 @@ public class PropertiesOptionsIO {
 			FileWriter fw = new FileWriter("src/main/resources/options.properties");
 			fw.append(olddata + optionKey + "=" + optionValue.toString());
 			fw.close();
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 		b.close();

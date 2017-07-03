@@ -7,7 +7,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -18,47 +21,46 @@ import org.json.simple.parser.JSONParser;
  */
 public class TeamsJsonReader {
 
-	List<Individual> myObjList = new ArrayList<Individual>();
-	List<Individual> myObjList1 = new ArrayList<Individual>();
-	List<Individual> myObjList2 = new ArrayList<Individual>();
-	List<Individual> myObjList3 = new ArrayList<Individual>();
-	List<Individual> myObjList4 = new ArrayList<Individual>();
+	List<Individual> individualList = new ArrayList<Individual>();
+	List<Individual> inactiveIndObjList = new ArrayList<Individual>();
+	List<Individual> activeIndObjList = new ArrayList<Individual>();
+	JSONParser parser = new JSONParser();
 
 	public List<Individual> getListOfIndividuals() throws FileNotFoundException, IOException {
 
-		JSONParser parser = new JSONParser();
-			myObjList.clear();
-		JSONObject obj = null;
+		individualList.clear();
+		JSONObject mainJsonObj = null;
 		try {
-			obj = (JSONObject) parser.parse(new FileReader("src/main/resources/db.json"));
-		} catch (org.json.simple.parser.ParseException e) {
+			mainJsonObj = (JSONObject) parser.parse(new FileReader("src/main/resources/db.json"));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
-		JSONObject jsonObject = (JSONObject) obj;
+		JSONArray individualjsArray = (JSONArray) mainJsonObj.get("individuals");
 
-		
-		JSONArray second = (JSONArray) jsonObject.get("individuals");
+		Individual tempObject;
+		JSONObject innerJson;
 
-		Individual obj1;
-		JSONObject myobj;
+		for (int index = 0; index < individualjsArray.size(); index++) {
 
-		for (int i = 0; i < second.size(); i++) {
+			innerJson = (JSONObject) individualjsArray.get(index);
 
-			myobj = (JSONObject) second.get(i);
-		
-			obj1 = new Individual(myobj.get("name").toString().trim(),
-					Integer.parseInt(myobj.get("id").toString().trim()),
-					Boolean.parseBoolean(myobj.get("active").toString().trim()));
+			Map<String, Object> individualMap = new HashMap();
+			individualMap.put("name", innerJson.get("name").toString().trim());
+			individualMap.put("id", innerJson.get("id").toString().trim());
+			individualMap.put("active", innerJson.get("active").toString().trim());
+
+			tempObject = new Individual(individualMap);
 
 			try {
-				myObjList.add(obj1);
+				individualList.add(tempObject);
 
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 
 		}
-		return myObjList;
+		return individualList;
 
 	}
 
@@ -72,18 +74,17 @@ public class TeamsJsonReader {
 	 */
 	public Individual getIndividualById(Integer id) throws ObjectNotFoundException {
 
-		for (int i = 0; i < myObjList.size(); i++) {
+		for (int index = 0; index < this.individualList.size(); index++) {
 
-			if ((int) myObjList.get(i).getId() == (int) id) {
+			if ((int) this.individualList.get(index).getId() == (int) id) {
 
-			
-				return myObjList.get(i);
+				return this.individualList.get(index);
 
 			}
 
 		}
-		
-		 throw new ObjectNotFoundException(null, null, null);
+
+		throw new ObjectNotFoundException("IndividualByname", id.toString(), null);
 
 	}
 
@@ -96,17 +97,16 @@ public class TeamsJsonReader {
 	 */
 	public Individual getIndividualByName(String name) throws ObjectNotFoundException {
 
-		for (int i = 0; i < myObjList.size(); i++) {
+		for (int index = 0; index < individualList.size(); index++) {
 
-			
-			if (myObjList.get(i).getName().equals(name)) {
+			if (individualList.get(index).getName().equals(name)) {
 
-					return myObjList.get(i);
+				return individualList.get(index);
 
 			}
 
 		}
-	throw new ObjectNotFoundException(null, null, null)	;
+		throw new ObjectNotFoundException("IndividualByname", name, name);
 	}
 
 	/**
@@ -116,38 +116,24 @@ public class TeamsJsonReader {
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	public List<Individual> getListOfInactiveIndividuals() throws FileNotFoundException, IOException {
-		
-		myObjList2.clear();
-		JSONParser parser = new JSONParser();
 
-		JSONObject obj = null;
-		try {
-			obj = (JSONObject) parser.parse(new FileReader("src/main/resources/db.json"));
-		} catch (org.json.simple.parser.ParseException e) {
+	public List<Individual> getListOfInactiveIndividuals() throws FileNotFoundException, IOException {
+
+		if (individualList.isEmpty()) {
+			individualList = this.getListOfIndividuals();
 		}
 
-		JSONObject jsonObject = (JSONObject) obj;
+		inactiveIndObjList.clear();
 
-		JSONArray second = (JSONArray) jsonObject.get("individuals");
+		for (int index = 0; index < this.individualList.size(); index++) {
 
-		Individual obj1;
-		JSONObject myobj;
-		
-		for (int i = 0; i < second.size(); i++) {
+			if (this.individualList.get(index).isActive() == false) {
 
-			myobj = (JSONObject) second.get(i);
-
-			if (Boolean.parseBoolean(myobj.get("active").toString()) == false) {
-				obj1 = new Individual(myobj.get("name").toString(), Integer.parseInt(myobj.get("id").toString()),
-						Boolean.parseBoolean(myobj.get("active").toString()));
-
-				myObjList2.add(obj1);
+				inactiveIndObjList.add(this.individualList.get(index));
 			}
 		}
 
-		
-		return myObjList2;
+		return inactiveIndObjList;
 
 	}
 
@@ -160,39 +146,25 @@ public class TeamsJsonReader {
 	 */
 	public List<Individual> getListOfActiveIndividuals() throws FileNotFoundException, IOException {
 
-		JSONParser parser = new JSONParser();
-		myObjList3.clear();
-
-		JSONObject obj = null;
-		try {
-			obj = (JSONObject) parser.parse(new FileReader("src/main/resources/db.json"));
-		} catch (org.json.simple.parser.ParseException e) {
+		if (inactiveIndObjList.isEmpty()) {
+			individualList = this.getListOfIndividuals();
 		}
 
-		JSONObject jsonObject = (JSONObject) obj;
+		activeIndObjList.clear();
 
-		JSONArray second = (JSONArray) jsonObject.get("individuals");
+		for (int index = 0; index < this.individualList.size(); index++) {
 
-		Individual obj1;
-		JSONObject myobj;
+			if (this.individualList.get(index).isActive() == true) {
 
-		for (int i = 0; i < second.size(); i++) {
-
-			myobj = (JSONObject) second.get(i);
-
-			if (Boolean.parseBoolean(myobj.get("active").toString()) == true) {
-				obj1 = new Individual(myobj.get("name").toString(), Integer.parseInt(myobj.get("id").toString()),
-						Boolean.parseBoolean(myobj.get("active").toString()));
-
-				myObjList3.add(obj1);
+				activeIndObjList.add(this.individualList.get(index));
 			}
 		}
 
-		return myObjList3;
+		return activeIndObjList;
 
 	}
 
-	List<Team> myObjList5 = new ArrayList<Team>();
+	List<Team> teamObjList = new ArrayList<Team>();
 
 	/**
 	 * get a list of team objects from db json
@@ -200,47 +172,53 @@ public class TeamsJsonReader {
 	 * @return
 	 * @throws IOException
 	 * @throws FileNotFoundException
+	 * @throws ObjectNotFoundException
+	 * @throws NumberFormatException
 	 */
-	public List<Team> getListOfTeams() throws FileNotFoundException, IOException {
-		JSONParser parser = new JSONParser();
-		myObjList5.clear();
-		JSONObject obj = null;
+	public List<Team> getListOfTeams()
+			throws FileNotFoundException, IOException, NumberFormatException, ObjectNotFoundException {
+		JSONObject mainJsObj = null;
+
+		teamObjList.clear();
+
 		try {
-			obj = (JSONObject) parser.parse(new FileReader("src/main/resources/db.json"));
-		} catch (org.json.simple.parser.ParseException e) {
+			mainJsObj = (JSONObject) parser.parse(new FileReader("src/main/resources/db.json"));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
-		if(myObjList.isEmpty())
-		{
-			myObjList4=this.getListOfIndividuals();
-			myObjList=myObjList4;
+		if (individualList.isEmpty()) {
+			individualList = this.getListOfIndividuals();
 		}
-		
-		JSONObject jsonObject = (JSONObject) obj;
 
-		JSONArray second = (JSONArray) jsonObject.get("teams");
+		JSONArray teamJsArray = (JSONArray) mainJsObj.get("teams");
 
-		Team obj1;
 		JSONObject myobj;
 
-		for (int i = 0; i < second.size(); i++) {
+		for (int index = 0; index < teamJsArray.size(); index++) {
 
-			myobj = (JSONObject) second.get(i);
+			myobj = (JSONObject) teamJsArray.get(index);
 
-			obj1 = new Team(myobj.get("name").toString(), Integer.parseInt(myobj.get("id").toString()), myObjList);
+			Map<String, Object> TeamMap = new HashMap();
+			TeamMap.put("name", myobj.get("name").toString().trim());
+			TeamMap.put("id", myobj.get("id").toString().trim());
 
-			myObjList5.add(obj1);
+			JSONArray team_members = (JSONArray) myobj.get("members");
+			List<Individual> memberIndividuals = new ArrayList<>();
+			for (int i = 0; i < team_members.size(); i++) {
+
+				memberIndividuals.add(this.getIndividualById(Integer.parseInt(team_members.get(i).toString())));
+
+			}
+
+			TeamMap.put("memberobject", memberIndividuals);
+
+			Team tempObj = new Team(TeamMap);
+			teamObjList.add(tempObj);
 
 		}
 
-		return myObjList5;
-
-	}
-
-	public static void main(String... S) throws IOException, ObjectNotFoundException {
-
-		TeamsJsonReader obj = new TeamsJsonReader();
-		System.out.println(obj.getListOfTeams().size());
+		return teamObjList;
 
 	}
 
